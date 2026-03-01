@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Zaid × Intan — 2 Months</title>
+  <style>
+    :root{
+      --ink:#1f2937;
+      --muted:#6b7280;
+      --card:rgba(255,255,255,.82);
+      --border:rgba(31,41,55,.10);
+      --btn:#111827;
+      --btnText:#ffffff;
+
+      /* Pinkish cosy background palette */
+      --bg1:#fff1f6;
+      --bg2:#ffe4ee;
+      --bg3:#ffd1e3;
+      --bg4:#ffe9d6;
+    }
+
+    *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--ink);
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(255, 174, 205, .55), transparent 60%),
+        radial-gradient(900px 700px at 95% 20%, rgba(255, 214, 230, .55), transparent 60%),
+        radial-gradient(900px 800px at 50% 105%, rgba(255, 214, 186, .45), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2) 35%, #ffffff 70%, #fff7fb);
+    }
+
+    /* subtle grain */
+    .noise{
+      pointer-events:none;
+      position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+      opacity:.08;
+      mix-blend-mode:soft-light;
+    }
+
+    /* Floating hearts layer */
+    .hearts{
+      pointer-events:none;
+      position:fixed; inset:0;
+      overflow:hidden;
+    }
+    .heart{
+      position:absolute;
+      bottom:-60px;
+      font-size:18px;
+      opacity:.0;
+      animation: floatUp linear forwards;
+      filter: drop-shadow(0 8px 12px rgba(17,24,39,.10));
+      will-change: transform, opacity;
+      user-select:none;
+    }
+    @keyframes floatUp{
+      0%   { transform: translate3d(0,0,0) scale(.85) rotate(0deg); opacity:0; }
+      10%  { opacity:.55; }
+      60%  { opacity:.45; }
+      100% { transform: translate3d(var(--dx, 0px), calc(-100vh - 120px), 0) scale(var(--s,1)) rotate(var(--r, 18deg)); opacity:0; }
+    }
+
+    /* Layout: mobile-first full screen */
+    .wrap{
+      height:100vh;
+      height:100dvh;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:
+        calc(10px + env(safe-area-inset-top))
+        calc(12px + env(safe-area-inset-right))
+        calc(12px + env(safe-area-inset-bottom))
+        calc(12px + env(safe-area-inset-left));
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:2px 2px 0;
+    }
+    .brand{display:flex; align-items:center; gap:10px; min-width:0;}
+    .icon{
+      width:44px; height:44px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,.62);
+      backdrop-filter: blur(12px);
+      font-size:18px;
+      flex:0 0 auto;
+    }
+    .names{min-width:0;}
+    .names .a{
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:-0.01em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .names .b{font-size:12px; color:var(--muted); margin-top:3px;}
+
+    .lang{
+      display:flex; align-items:center; gap:8px; flex-wrap:nowrap;
+      background:rgba(255,255,255,.55);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:6px;
+      backdrop-filter: blur(12px);
+      flex:0 0 auto;
+    }
+    .lang span{font-size:12px; color:var(--muted); padding:0 6px; display:none;}
+    .pillBtn{
+      border:1px solid transparent;
+      background:transparent;
+      padding:10px 12px;               /* bigger tap targets */
+      border-radius:12px;
+      font-size:13px;
+      cursor:pointer;
+      min-width:52px;
+    }
+    .pillBtn.active{
+      border-color:rgba(17,24,39,.18);
+      background:rgba(255,255,255,.78);
+    }
+
+    /* Slide stage */
+    .stage{
+      flex:1;
+      position:relative;
+      overflow:hidden;
+      border-radius:22px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.30);
+      backdrop-filter: blur(14px);
+      display:flex;
+      align-items:stretch;
+      justify-content:stretch;
+      touch-action: pan-y; /* allow vertical scroll gestures outside; horizontal handled by us */
+    }
+    .slides{
+      width:100%;
+      height:100%;
+      display:flex;
+      transition: transform .32s ease;
+    }
+    .slide{
+      min-width:100%;
+      padding:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .card{
+      width:100%;
+      max-width:720px;
+      border-radius:22px;
+      background:var(--card);
+      border:1px solid var(--border);
+      box-shadow: 0 18px 40px rgba(17,24,39,.08);
+      padding:18px;
+      backdrop-filter: blur(14px);
+    }
+    .kicker{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; color:var(--muted);
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.58);
+      border-radius:999px;
+      padding:7px 10px;
+    }
+    h1{
+      margin:14px 0 0;
+      font-size:28px;
+      letter-spacing:-0.03em;
+      line-height:1.15;
+    }
+    p{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
+    .big{
+      margin-top:12px;
+      white-space:pre-wrap;
+      color:#334155;
+      line-height:1.85;
+      font-size:14px;
+    }
+    .quote{
+      margin-top:12px;
+      padding:14px 14px;
+      border-radius:18px;
+      background:rgba(248,250,252,.88);
+      border:1px solid var(--border);
+      color:#334155;
+      line-height:1.75;
+      font-size:14px;
+    }
+
+    /* Controls: sticky-ish bottom bar inside wrap */
+    .controls{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:2px 2px 0;
+    }
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.65);
+      padding:12px 14px;               /* bigger tap targets */
+      border-radius:16px;
+      font-size:14px;
+      display:inline-flex; align-items:center; gap:8px;
+      cursor:pointer;
+      backdrop-filter: blur(12px);
+      min-width:96px;
+      justify-content:center;
+    }
+    .btn.primary{
+      background:var(--btn);
+      color:var(--btnText);
+      border-color:rgba(17,24,39,.25);
+    }
+    .dots{
+      display:flex; gap:8px; align-items:center; justify-content:center;
+      flex:1;
+      min-height:44px;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background:rgba(17,24,39,.18);
+      border:1px solid rgba(255,255,255,.7);
+      cursor:pointer;
+    }
+    .dot.active{background:rgba(17,24,39,.62)}
+    .hint{
+      text-align:center;
+      font-size:12px;
+      color:var(--muted);
+      padding-bottom:2px;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      transform:translateX(-50%);
+      background:#111827;
+      color:#fff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease;
+      z-index:50;
+    }
+    .toast.show{opacity:1}
+
+    /* Reduce motion accessibility */
+    @media (prefers-reduced-motion: reduce){
+      .slides{transition:none}
+      .heart{animation:none; display:none;}
+    }
+
+    /* Slightly roomier on larger screens */
+    @media (min-width:720px){
+      .slide{padding:20px}
+      .card{padding:22px}
+      h1{font-size:32px}
+      p,.big,.quote{font-size:15px}
+      .lang span{display:inline}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+  <div class="hearts" id="hearts"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="icon">♥</div>
+        <div class="names">
+          <div class="a" id="namesLine">Zaid × Intan</div>
+          <div class="b" id="miniLine">2 months • just us</div>
+        </div>
+      </div>
+
+      <div class="lang">
+        <span id="langLabel">Language</span>
+        <button class="pillBtn active" id="btnEN" type="button">EN</button>
+        <button class="pillBtn" id="btnID" type="button">ID</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="slides" id="slides">
+        <!-- Slide 1 -->
+        <section class="slide">
+          <div class="card">
+            <div class="kicker">✨ <span id="s1Kicker">Two months together</span></div>
+            <h1 id="s1Title">Happy 2 months, Intan.</h1>
+            <p id="s1Sub">A tiny cozy page to remind you: you matter to me — a lot.</p>
+            <div class="quote" id="s1Quote">“Even from far away, you still feel close to my heart.”</div>
+          </div>
+        </section>
+
+        <!-- Slide 2 -->
+        <section class="slide">
+          <div class="card">
+            <div class="kicker">💌 <span id="s2Kicker">A short letter</span></div>
+            <h1 id="s2Title">For you, from me.</h1>
+            <div class="big" id="s2Body"></div>
+          </div>
+        </section>
+
+        <!-- Slide 3 -->
+        <section class="slide">
+          <div class="card">
+            <div class="kicker">📌 <span id="s3Kicker">One message</span></div>
+            <h1 id="s3Title">A message you can keep.</h1>
+            <div class="quote" id="s3Msg"></div>
+
+            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn primary" id="copyBtn" type="button">📋 <span id="copyText">Copy</span></button>
+              <button class="btn" id="nextBtn2" type="button">➡️ <span id="nextText2">Next</span></button>
+            </div>
+
+            <p style="margin-top:10px" id="s3Hint">Send it with a voice note for extra warmth.</p>
+          </div>
+        </section>
+
+        <!-- Slide 4 -->
+        <section class="slide">
+          <div class="card">
+            <div class="kicker">🤍 <span id="s4Kicker">Promise</span></div>
+            <h1 id="s4Title">I’m here. I choose you.</h1>
+            <div class="big" id="s4Body"></div>
+            <p style="margin-top:12px" id="s4End">— Zaid ♥ Intan</p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="prevBtn" type="button">⬅️ <span id="prevText">Prev</span></button>
+      <div class="dots" id="dots"></div>
+      <button class="btn" id="nextBtn" type="button">➡️ <span id="nextText">Next</span></button>
+    </div>
+
+    <div class="hint" id="hintLine">Tip: swipe left/right on the slides.</div>
+  </div>
+
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    // ====== Names (already set) ======
+    const CONFIG = { you: "Zaid", partner: "Intan" };
+
+    const TXT = {
+      en: {
+        langLabel: "Language",
+        miniLine: "2 months • just us",
+        hintLine: "Tip: swipe left/right on the slides.",
+        prev: "Prev",
+        next: "Next",
+        copy: "Copy message",
+        copied: "Copied!",
+        s1Kicker: "Two months together",
+        s1Title: "Happy 2 months, Intan.",
+        s1Sub: "A tiny cozy page to remind you: you matter to me — a lot.",
+        s1Quote: "“Even from far away, you still feel close to my heart.”",
+
+        s2Kicker: "A short letter",
+        s2Title: "For you, from me.",
+        s2Body:
+`Happy 2 months, sayang.
+
+Even though we’re far, you’ve made these months feel warm and real.
+Thank you for staying, for trying, and for being yourself with me.
+
+I don’t want perfect — I want us.
+Growing, learning, and choosing each other, calmly and sincerely.
+
+I’m proud of you. I’m grateful for you.
+Always. ❤️`,
+
+        s3Kicker: "One message",
+        s3Title: "A message you can keep.",
+        s3Msg:
+"Happy 2 months sayang 🤍 Even though we’re far, you made these months really special. Thank you for staying, for trying, and for being you. I’m grateful I get to call you mine.",
+        s3Hint: "Send it with a voice note for extra warmth.",
+
+        s4Kicker: "Promise",
+        s4Title: "I’m here. I choose you.",
+        s4Body:
+`No matter what kind of day you’re having,
+you can talk to me.
+
+I won’t judge you.
+I’ll listen, and I’ll stay.
+
+Thank you for these two months, Intan.
+Let’s keep going—one soft day at a time.`
+      },
+
+      id: {
+        langLabel: "Bahasa",
+        miniLine: "2 bulan • kita doang",
+        hintLine: "Tips: geser kiri/kanan di slide-nya.",
+        prev: "Sebelum",
+        next: "Lanjut",
+        copy: "Salin pesan",
+        copied: "Tersalin!",
+        s1Kicker: "Dua bulan bareng",
+        s1Title: "Happy 2 bulan, Intan.",
+        s1Sub: "Halaman kecil yang cozy buat ngingetin kamu: kamu berarti banget buat aku.",
+        s1Quote: "“Walaupun jauh, kamu tetap deket di hati aku.”",
+
+        s2Kicker: "Surat singkat",
+        s2Title: "Buat kamu, dari aku.",
+        s2Body:
+`Happy 2 months ya sayang 🤍
+
+Walaupun kita jauh, kamu bikin dua bulan ini terasa hangat dan nyata.
+Makasih udah bertahan, udah berusaha, dan udah jadi diri kamu sama aku.
+
+Aku gak cari yang sempurna — aku maunya kita.
+Tumbuh, belajar, dan tetap saling milih dengan tenang dan tulus.
+
+Aku bangga sama kamu. Aku bersyukur punya kamu.
+Selalu. ❤️`,
+
+        s3Kicker: "Satu pesan",
+        s3Title: "Pesan yang bisa kamu simpan.",
+        s3Msg:
+"Happy 2 months sayang 🤍 Walaupun jauh, kamu bikin dua bulan ini spesial. Makasih udah bertahan, udah berusaha, udah jadi diri kamu. Aku bersyukur bisa jalanin ini bareng kamu.",
+        s3Hint: "Kirim sambil voice note biar makin hangat.",
+
+        s4Kicker: "Janji",
+        s4Title: "Aku di sini. Aku milih kamu.",
+        s4Body:
+`Apapun harimu hari ini,
+kamu bisa cerita ke aku.
+
+Aku gak akan nge-judge kamu.
+Aku dengerin, dan aku tetap di sini.
+
+Makasih ya buat dua bulan ini, Intan.
+Kita lanjut pelan-pelan, satu hari yang lembut tiap kali.`
+      }
+    };
+
+    const $ = (id) => document.getElementById(id);
+    let lang = "en";
+    let index = 0;
+
+    const slides = $("slides");
+    const total = slides.children.length;
+
+    function showToast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"), 1200);
+    }
+
+    function buildDots(){
+      const dots = $("dots");
+      dots.innerHTML = "";
+      for(let i=0;i<total;i++){
+        const d = document.createElement("div");
+        d.className = "dot" + (i===0 ? " active" : "");
+        d.addEventListener("click", ()=>go(i));
+        dots.appendChild(d);
+      }
+    }
+
+    function applyText(){
+      const t = TXT[lang];
+      $("namesLine").textContent = `${CONFIG.you} × ${CONFIG.partner}`;
+      $("miniLine").textContent = t.miniLine;
+
+      $("langLabel").textContent = t.langLabel;
+      $("hintLine").textContent = t.hintLine;
+      $("prevText").textContent = t.prev;
+      $("nextText").textContent = t.next;
+      $("copyText").textContent = t.copy;
+      $("nextText2").textContent = t.next;
+
+      $("s1Kicker").textContent = t.s1Kicker;
+      $("s1Title").textContent = t.s1Title;
+      $("s1Sub").textContent = t.s1Sub;
+      $("s1Quote").textContent = t.s1Quote;
+
+      $("s2Kicker").textContent = t.s2Kicker;
+      $("s2Title").textContent = t.s2Title;
+      $("s2Body").textContent = t.s2Body;
+
+      $("s3Kicker").textContent = t.s3Kicker;
+      $("s3Title").textContent = t.s3Title;
+      $("s3Msg").textContent = t.s3Msg;
+      $("s3Hint").textContent = t.s3Hint;
+
+      $("s4Kicker").textContent = t.s4Kicker;
+      $("s4Title").textContent = t.s4Title;
+      $("s4Body").textContent = t.s4Body;
+      $("s4End").textContent = `— ${CONFIG.you} ♥ ${CONFIG.partner}`;
+
+      $("btnEN").classList.toggle("active", lang === "en");
+      $("btnID").classList.toggle("active", lang === "id");
+
+      [...$("dots").children].forEach((d, i)=> d.classList.toggle("active", i === index));
+    }
+
+    function go(i){
+      index = Math.max(0, Math.min(total - 1, i));
+      slides.style.transform = `translateX(-${index * 100}%)`;
+      applyText();
+    }
+
+    async function copyMessage(){
+      const text = TXT[lang].s3Msg;
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast(TXT[lang].copied);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        showToast(TXT[lang].copied);
+      }
+    }
+
+    // Swipe (mobile)
+    let startX = null, startY = null;
+    $("stage").addEventListener("touchstart", (e)=> {
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+    }, {passive:true});
+
+    $("stage").addEventListener("touchend", (e)=> {
+      if (startX === null) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      startX = startY = null;
+
+      // horizontal swipe only if it's mostly horizontal
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0) go(index + 1);
+      else go(index - 1);
+    }, {passive:true});
+
+    // Floating hearts (lightweight + mobile-friendly)
+    const heartsLayer = $("hearts");
+    const HEARTS = ["💗","💖","💕","💞","💓","💘"];
+
+    function spawnHeart(){
+      // limit count for performance
+      if (heartsLayer.childElementCount > 18) return;
+
+      const h = document.createElement("div");
+      h.className = "heart";
+      h.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+
+      const left = Math.random() * 100; // vw
+      const duration = 6 + Math.random() * 5; // seconds
+      const size = 14 + Math.random() * 14; // px
+      const dx = (Math.random() * 120 - 60) + "px";
+      const rot = (Math.random() * 70 - 35) + "deg";
+      const scale = (0.85 + Math.random() * 0.55).toFixed(2);
+
+      h.style.left = left + "vw";
+      h.style.fontSize = size + "px";
+      h.style.animationDuration = duration + "s";
+      h.style.setProperty("--dx", dx);
+      h.style.setProperty("--r", rot);
+      h.style.setProperty("--s", scale);
+
+      heartsLayer.appendChild(h);
+      // remove after animation
+      setTimeout(()=> h.remove(), (duration + 0.2) * 1000);
+    }
+
+    // Start hearts (respect reduced motion)
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let heartTimer = null;
+    function startHearts(){
+      if (reduce) return;
+      // gentle rate
+      heartTimer = setInterval(spawnHeart, 650);
+      // a few upfront
+      for (let i=0;i<5;i++) setTimeout(spawnHeart, i*200);
+    }
+
+    // Init
+    buildDots();
+    applyText();
+    go(0);
+
+    $("btnEN").addEventListener("click", ()=>{ lang="en"; applyText(); });
+    $("btnID").addEventListener("click", ()=>{ lang="id"; applyText(); });
+    $("prevBtn").addEventListener("click", ()=> go(index - 1));
+    $("nextBtn").addEventListener("click", ()=> go(index + 1));
+    $("nextBtn2").addEventListener("click", ()=> go(index + 1));
+    $("copyBtn").addEventListener("click", copyMessage);
+
+    window.addEventListener("keydown", (e)=> {
+      if (e.key === "ArrowRight") go(index + 1);
+      if (e.key === "ArrowLeft") go(index - 1);
+    });
+
+    startHearts();
+  </script>
+</body>
+</html>
